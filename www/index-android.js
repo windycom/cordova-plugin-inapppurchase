@@ -36,7 +36,7 @@ if (!Array.prototype.find) {
   };
 }
 
-'use strict';
+"use strict";
 
 /*!
  *
@@ -46,9 +46,7 @@ if (!Array.prototype.find) {
  * Licensed under the MIT license. Please see README for more information.
  *
  */
-
 var utils = {};
-
 utils.errors = {
   101: 'invalid argument - productIds must be an array of strings',
   102: 'invalid argument - productId must be a string',
@@ -81,7 +79,7 @@ utils.chunk = function (array, size) {
     return result.concat([array.slice(i * size, (i + 1) * size)]);
   }, []);
 };
-'use strict';
+"use strict";
 
 /*!
  *
@@ -91,13 +89,13 @@ utils.chunk = function (array, size) {
  * Licensed under the MIT license. Please see README for more information.
  *
  */
-
-var inAppPurchase = { utils: utils };
+var inAppPurchase = {
+  utils: utils
+};
 
 var createIapError = function createIapError(reject) {
   return function () {
     var err = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
     err.errorCode = err.code;
     return reject(err);
   };
@@ -105,7 +103,6 @@ var createIapError = function createIapError(reject) {
 
 var nativeCall = function nativeCall(name) {
   var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
   return new Promise(function (resolve, reject) {
     window.cordova.exec(function (res) {
       resolve(res);
@@ -145,17 +142,18 @@ inAppPurchase.getProducts = function (productIds) {
           };
         });
         resolve(arr);
-      }).catch(reject);
+      })["catch"](reject);
     }
   });
 };
 
-var executePaymentOfType = function executePaymentOfType(type, productId, extraParams) {
+var executePaymentOfType = function executePaymentOfType(type, productId, developerPayload) {
+  developerPayload = developerPayload || "";
   return new Promise(function (resolve, reject) {
-    if (!inAppPurchase.utils.validString(productId)) {
+    if (!inAppPurchase.utils.validString(productId, developerPayload)) {
       reject(new Error(inAppPurchase.utils.errors[102]));
     } else {
-      nativeCall(type, [productId, extraParams]).then(function (res) {
+      nativeCall(type, [productId, developerPayload]).then(function (res) {
         resolve({
           signature: res.signature,
           productId: res.productId,
@@ -164,17 +162,31 @@ var executePaymentOfType = function executePaymentOfType(type, productId, extraP
           productType: res.type,
           receipt: res.receipt
         });
-      }).catch(reject);
+      })["catch"](reject);
     }
   });
 };
 
-inAppPurchase.buy = function (productId, extraParams) {
-  return executePaymentOfType('buy', productId, extraParams);
+inAppPurchase.buy = function (productId, developerPayload) {
+  return executePaymentOfType('buy', productId, developerPayload);
 };
 
-inAppPurchase.subscribe = function (productId, extraParams) {
-  return executePaymentOfType('subscribe', productId, extraParams);
+inAppPurchase.subscribe = function (productId, developerPayload) {
+  return executePaymentOfType('subscribe', productId, developerPayload);
+};
+
+inAppPurchase.acknowledge = function (type, receipt, signature) {
+  return new Promise(function (resolve, reject) {
+    if (!inAppPurchase.utils.validString(type)) {
+      reject(new Error(inAppPurchase.utils.errors[103]));
+    } else if (!inAppPurchase.utils.validString(receipt)) {
+      reject(new Error(inAppPurchase.utils.errors[104]));
+    } else if (!inAppPurchase.utils.validString(signature)) {
+      reject(new Error(inAppPurchase.utils.errors[105]));
+    } else {
+      nativeCall('acknowledgePurchase', [type, receipt, signature]).then(resolve)["catch"](reject);
+    }
+  });
 };
 
 inAppPurchase.consume = function (type, receipt, signature) {
@@ -186,7 +198,7 @@ inAppPurchase.consume = function (type, receipt, signature) {
     } else if (!inAppPurchase.utils.validString(signature)) {
       reject(new Error(inAppPurchase.utils.errors[105]));
     } else {
-      nativeCall('consumePurchase', [type, receipt, signature]).then(resolve).catch(reject);
+      nativeCall('consumePurchase', [type, receipt, signature]).then(resolve)["catch"](reject);
     }
   });
 };
@@ -196,13 +208,14 @@ inAppPurchase.restorePurchases = function () {
     return nativeCall('restorePurchases', []);
   }).then(function (purchases) {
     var arr = [];
+
     if (purchases) {
       arr = purchases.map(function (val) {
         return {
           productId: val.productId,
-          state: val.purchaseState,
+          state: val.state,
           transactionId: val.orderId,
-          date: val.purchaseTime,
+          date: val.date,
           type: val.type,
           productType: val.type,
           signature: val.signature,
@@ -210,6 +223,7 @@ inAppPurchase.restorePurchases = function () {
         };
       });
     }
+
     return Promise.resolve(arr);
   });
 };

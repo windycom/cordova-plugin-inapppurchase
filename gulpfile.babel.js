@@ -11,7 +11,7 @@ const polyfillsAndroid = 'polyfills-android.js';
 const indexIos = 'index-ios.js';
 const utils = 'utils.js';
 
-const build = () => {
+const build = (done) => {
   gulp
     .src([ src + utils, src + indexIos ])
     .pipe(plumber())
@@ -25,13 +25,14 @@ const build = () => {
     .pipe(addsrc.prepend(src + polyfillsAndroid))
     .pipe(concat(indexAndroid))
     .pipe(gulp.dest(dist));
+  done();
 };
 
-gulp.task('build', build);
+gulp.task('build', gulp.series(build));
 
 gulp.task('watch', () => {
-  gulp.run(['build']);
+  gulp.run(gulp.series('build'));
   gulp.watch(src + '*.js', ['build']);
 });
 
-gulp.task('default', ['build']);
+gulp.task('default', gulp.series('build'));

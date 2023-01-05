@@ -25,18 +25,18 @@ import java.util.Map;
  * An Inventory is returned by such methods as {@link IabHelper#queryInventory}.
  */
 public class Inventory {
-    Map<String,SkuDetails> mSkuMap = new HashMap<String,SkuDetails>();
-    Map<String,Purchase> mPurchaseMap = new HashMap<String,Purchase>();
+    Map<String,IabSkuDetails> mSkuMap = new HashMap<String,IabSkuDetails>();
+    Map<String,IabPurchase> mPurchaseMap = new HashMap<String,IabPurchase>();
 
     Inventory() { }
 
     /** Returns the listing details for an in-app product. */
-    public SkuDetails getSkuDetails(String sku) {
+    public IabSkuDetails getIabSkuDetails(String sku) {
         return mSkuMap.get(sku);
     }
 
     /** Returns purchase information for a given product, or null if there is no purchase. */
-    public Purchase getPurchase(String sku) {
+    public IabPurchase getPurchase(String sku) {
         return mPurchaseMap.get(sku);
     }
 
@@ -70,22 +70,22 @@ public class Inventory {
     /** Returns a list of all owned product IDs of a given type */
     List<String> getAllOwnedSkus(String itemType) {
         List<String> result = new ArrayList<String>();
-        for (Purchase p : mPurchaseMap.values()) {
-            if (p.getItemType().equals(itemType)) result.add(p.getSku());
+        for (IabPurchase p : mPurchaseMap.values()) {
+            if ((itemType == null) || p.getItemType().equals(itemType)) result.add(p.getSku());
         }
         return result;
     }
 
     /** Returns a list of all purchases. */
-    List<Purchase> getAllPurchases() {
-        return new ArrayList<Purchase>(mPurchaseMap.values());
+    List<IabPurchase> getAllPurchases() {
+        return new ArrayList<IabPurchase>(mPurchaseMap.values());
     }
 
-    void addSkuDetails(SkuDetails d) {
+    void addIabSkuDetails(IabSkuDetails d) {
         mSkuMap.put(d.getSku(), d);
     }
 
-    void addPurchase(Purchase p) {
+    void addPurchase(IabPurchase p) {
         mPurchaseMap.put(p.getSku(), p);
     }
 }

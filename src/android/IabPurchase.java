@@ -21,7 +21,7 @@ import org.json.JSONObject;
 /**
  * Represents an in-app billing purchase.
  */
-public class Purchase {
+public class IabPurchase {
     String mItemType;  // ITEM_TYPE_INAPP or ITEM_TYPE_SUBS
     String mOrderId;
     String mPackageName;
@@ -33,7 +33,7 @@ public class Purchase {
     String mOriginalJson;
     String mSignature;
 
-    public Purchase(String itemType, String jsonPurchaseInfo, String signature) throws JSONException {
+    public IabPurchase(String itemType, String jsonPurchaseInfo, String signature) throws JSONException {
         mItemType = itemType;
         mOriginalJson = jsonPurchaseInfo;
         JSONObject o = new JSONObject(mOriginalJson);

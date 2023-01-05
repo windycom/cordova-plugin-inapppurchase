@@ -5,9 +5,13 @@
 
 A lightweight Cordova plugin for in app purchases on iOS/Android. See [demo app](https://github.com/AlexDisler/cordova-inapppurchases-app) and [blog post](https://alexdisler.com/2016/02/29/in-app-purchases-ionic-cordova/).
 
-## Maintenance status
+## Origin
 
-This repository is just a cherry-picked collection of all publicly available forks. It is not actively maintained. Below is a list of forks on which this repo is directly or indirectly based:
+The Android portion of this library was rewritten to work with Google Play Billing Library Version 4.  This is because of the recent Google Store requirement that version 3 or above is implemented for IAP.  The goal was to make minimal changes to the existing code, and to match the new code to the same coding conventions.
+
+Old IAP code should work as-is with 1 caveat:  Google now requires that all purchases either be consumed or acknowledge, or they will be automatically refunded.  The existing consume functionality has been rewritten (but not tested yet!) and the acknowledge function has been added.
+
+The repository was cherry-picked collection of all publicly available forks. Below is a list of forks on which this repo is directly or indirectly based:
 - [Chadori/cordova-plugin-inapppurchase](https://github.com/Chadori/cordova-plugin-inapppurchase)
 - [ghenry22/cordova-plugin-inapppurchase](https://github.com/ghenry22/cordova-plugin-inapppurchase)
 - [RainerAppel/cordova-plugin-inapppurchase](https://github.com/RainerAppel/cordova-plugin-inapppurchase)
@@ -18,6 +22,7 @@ This repository is just a cherry-picked collection of all publicly available for
 
 ## Features
 
+- Updated for Google Play Billing Library Version 4.  Not all functionality has been tested, and unit tests have *not* been updated or tried.
 - Simple, promise-based API
 - Support for consumable/non-consumable products and paid/free subscriptions
 - Support for restoring purchases
@@ -25,7 +30,7 @@ This repository is just a cherry-picked collection of all publicly available for
 
 ## Install
 
-    $ cordova plugin add cordova-plugin-inapppurchase
+    $ cordova plugin add cordova-plugin-inapppurchase-2
 
 ## Configuration
 
@@ -96,8 +101,8 @@ If successful, the promise resolves to an object with the following attributes t
 
 - ```transactionId``` - The transaction/order id
 - ```receipt``` - On ***iOS*** it will be the base64 string of the receipt, on ***Android*** it will be a string of a json with all the transaction details required for validation such as ```{"orderId":"...","packageName:"...","productId":"...","purchaseTime":"...", "purchaseState":"...","purchaseToken":"..."}```
-- ```signature``` - On Android it can be used to [consume](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
-- ```productType``` - On Android it can be used to [consume](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
+- ```signature``` - On Android it can be used to [consume](#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
+- ```productType``` - On Android it can be used to [consume](#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
 
 ***Receipt validation:*** - To [validate your receipt](https://alexdisler.com/2016/03/20/validating-cordova-in-app-purchases-on-ios-and-android-using-nodejs/), you will need the ```receipt``` and ```signature``` on Android and the ```receipt``` and ```transactionId``` on iOS.
 
@@ -128,7 +133,7 @@ inAppPurchase
 - ___productId___ - a string of the productId
 - ___extraParams___ - (Android) an associative array that affects the operation of getBuyIntentExtraParams()
 
-This function behaves the same as [buy()](https://github.com/AlexDisler/cordova-plugin-inapppurchase#buy) but with subscriptions.
+This function behaves the same as [buy()](#buy) but with subscriptions.
 
 ### Consume
 
@@ -138,7 +143,7 @@ This function behaves the same as [buy()](https://github.com/AlexDisler/cordova-
 - ___receipt___ - string (containing a json)
 - ___signature___ - string
 
-All 3 parameters are returned by the [buy()](https://github.com/AlexDisler/cordova-plugin-inapppurchase#buy) or [restorePurchases()](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaserestorepurchases) functions.
+All 3 parameters are returned by the [buy()](#buy) or [restorePurchases()](#inapppurchaserestorepurchases) functions.
 
 Call this function after purchasing a "consumable" product to mark it as consumed.
 
@@ -167,6 +172,42 @@ inAppPurchase
   });
 ```
 
+### Acknowledge
+
+#### inAppPurchase.acknowledge(productType, receipt, signature)
+
+- ___productType___ - string
+- ___receipt___ - string (containing a json)
+- ___signature___ - string
+
+All 3 parameters are returned by the [buy()](#buy) or [restorePurchases()](#inapppurchaserestorepurchases) functions.
+
+Similar to consume, call this function after purchasing a product or subscription to mark it as acknowledged.
+
+___NOTE: This function is only relevant to Android purchases and subscriptions.___
+
+On ***Android***, you must acknowledge products and subscriptions.  You must acknowledge or consume each purchase or Google will refund after 3 days, currently.
+
+On ***iOS*** there is no need to "acknowledge" a product. However, in order to make your code cross platform, it is recommended to call it for iOS purchases and subscriptions as well.
+
+___Example:___
+
+```js
+// first buy the product...
+inAppPurchase
+  .buy('com.yourapp.prod1')
+  .then(function (data) {
+    // ...then mark it as consumed:
+    return inAppPurchase.acknowledge(data.productType, data.receipt, data.signature);
+  })
+  .then(function () {
+    console.log('product was successfully acknowledged!');
+  })
+  .catch(function (err) {
+    console.log(err);
+  });
+```
+
 ### Restore Purchases
 
 #### inAppPurchase.restorePurchases()
@@ -177,9 +218,9 @@ If successful, the promise resolves to an array of objects with the following at
 - ```state``` - the state of the product. On ***Android*** the statuses are: ```0 - ACTIVE, 1 - CANCELLED,  2 - REFUNDED```
 - ```transactionId```
 - ```date``` - timestamp of the purchase
-- ```productType``` - On Android it can be used to [consume](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
-- ```receipt``` - On Android it can be used to [consume](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
-- ```signature``` - On Android it can be used to [consume](https://github.com/AlexDisler/cordova-plugin-inapppurchase#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
+- ```productType``` - On Android it can be used to [consume](#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
+- ```receipt``` - On Android it can be used to [consume](#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
+- ```signature``` - On Android it can be used to [consume](#inapppurchaseconsumeproducttype-receipt-signature) a purchase. On iOS it will be an empty string.
 
 ___Example:___
 

@@ -1,4 +1,4 @@
-'use strict';
+"use strict";
 
 /*!
  *
@@ -8,9 +8,7 @@
  * Licensed under the MIT license. Please see README for more information.
  *
  */
-
 var utils = {};
-
 utils.errors = {
   101: 'invalid argument - productIds must be an array of strings',
   102: 'invalid argument - productId must be a string',
@@ -43,7 +41,7 @@ utils.chunk = function (array, size) {
     return result.concat([array.slice(i * size, (i + 1) * size)]);
   }, []);
 };
-'use strict';
+"use strict";
 
 /*!
  *
@@ -53,12 +51,12 @@ utils.chunk = function (array, size) {
  * Licensed under the MIT license. Please see README for more information.
  *
  */
-
-var inAppPurchase = { utils: utils };
+var inAppPurchase = {
+  utils: utils
+};
 
 var nativeCall = function nativeCall(name) {
   var args = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : [];
-
   return new Promise(function (resolve, reject) {
     window.cordova.exec(function (res) {
       resolve(res);
@@ -93,12 +91,17 @@ inAppPurchase.getProducts = function (productIds) {
           });
           resolve(arr);
         }
-      }).catch(reject);
+      })["catch"](reject);
     }
   });
 };
+/**
+ * @param productId - The InAppPurchase productId as defined in iTunesConnect
+ * @param extraParams - Not used; for compatability with Android
+ */
 
-inAppPurchase.buy = function (productId) {
+
+inAppPurchase.buy = function (productId, extraParams) {
   return new Promise(function (resolve, reject) {
     if (!inAppPurchase.utils.validString(productId)) {
       reject(new Error(inAppPurchase.utils.errors[102]));
@@ -108,25 +111,37 @@ inAppPurchase.buy = function (productId) {
           transactionId: res.transactionId,
           receipt: res.receipt
         });
-      }).catch(reject);
+      })["catch"](reject);
     }
   });
 };
-
 /**
  * This function exists so that the iOS plugin API will be compatible with that of Android -
  * where this function is required.
  * See README for more details.
  */
-inAppPurchase.subscribe = function (productId) {
-  return inAppPurchase.buy(productId);
+
+
+inAppPurchase.subscribe = function (productId, extraParams) {
+  return inAppPurchase.buy(productId, extraParams);
 };
-
 /**
  * This function exists so that the iOS plugin API will be compatible with that of Android -
  * where this function is required.
  * See README for more details.
  */
+
+
+inAppPurchase.acknowledge = function () {
+  return Promise.resolve();
+};
+/**
+ * This function exists so that the iOS plugin API will be compatible with that of Android -
+ * where this function is required.
+ * See README for more details.
+ */
+
+
 inAppPurchase.consume = function () {
   return Promise.resolve();
 };
@@ -134,19 +149,11 @@ inAppPurchase.consume = function () {
 inAppPurchase.getReceipt = function () {
   return nativeCall('getReceipt').then(function (res) {
     var receipt = '';
-    if (res && res.receipt) {
-      receipt = res.receipt;
-    }
-    return receipt;
-  });
-};
 
-inAppPurchase.getLocalReceipt = function () {
-  return nativeCall('getLocalReceipt').then(function (res) {
-    var receipt = '';
     if (res && res.receipt) {
       receipt = res.receipt;
     }
+
     return receipt;
   });
 };
@@ -154,6 +161,7 @@ inAppPurchase.getLocalReceipt = function () {
 inAppPurchase.restorePurchases = function () {
   return nativeCall('restorePurchases').then(function (res) {
     var arr = [];
+
     if (res && res.transactions) {
       arr = res.transactions.map(function (val) {
         return {
@@ -164,6 +172,7 @@ inAppPurchase.restorePurchases = function () {
         };
       });
     }
+
     return arr;
   });
 };

@@ -82,6 +82,15 @@ inAppPurchase.subscribe = (productId, extraParams) => {
  * where this function is required.
  * See README for more details.
  */
+inAppPurchase.acknowledge = () => {
+  return Promise.resolve();
+};
+
+/**
+ * This function exists so that the iOS plugin API will be compatible with that of Android -
+ * where this function is required.
+ * See README for more details.
+ */
 inAppPurchase.consume = () => {
   return Promise.resolve();
 };

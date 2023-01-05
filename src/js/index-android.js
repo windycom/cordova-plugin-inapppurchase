@@ -88,6 +88,20 @@ inAppPurchase.subscribe = (productId, developerPayload) => {
   return executePaymentOfType('subscribe', productId, developerPayload);
 };
 
+inAppPurchase.acknowledge = (type, receipt, signature) => {
+  return new Promise((resolve, reject) => {
+    if(!inAppPurchase.utils.validString(type)) {
+      reject(new Error(inAppPurchase.utils.errors[103]));
+    } else if (!inAppPurchase.utils.validString(receipt)) {
+      reject(new Error(inAppPurchase.utils.errors[104]));
+    } else if (!inAppPurchase.utils.validString(signature)) {
+      reject(new Error(inAppPurchase.utils.errors[105]));
+    } else {
+      nativeCall('acknowledgePurchase', [type, receipt, signature]).then(resolve).catch(reject);
+    }
+  });
+};
+
 inAppPurchase.consume = (type, receipt, signature) => {
   return new Promise((resolve, reject) => {
     if(!inAppPurchase.utils.validString(type)) {
